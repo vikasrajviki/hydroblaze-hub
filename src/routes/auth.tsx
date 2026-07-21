@@ -23,10 +23,8 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [remember, setRemember] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -40,30 +38,17 @@ function AuthPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("Welcome back");
-        navigate({ to: "/dashboard", replace: true });
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { full_name: name },
-          },
-        });
-        if (error) throw error;
-        toast.success("Account created. You can sign in now.");
-        setMode("signin");
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("Welcome back");
+      navigate({ to: "/dashboard", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setBusy(false);
     }
   };
+
 
   const handleGoogle = async () => {
     setBusy(true);
@@ -112,13 +97,9 @@ function AuthPage() {
           <div className="lg:hidden mb-8 flex justify-center"><Logo /></div>
           <div className="glass-panel rounded-2xl p-8 shadow-elevated">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold tracking-tight">
-                {mode === "signin" ? "Welcome back" : "Create your account"}
-              </h2>
+              <h2 className="text-2xl font-bold tracking-tight">Welcome back</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {mode === "signin"
-                  ? "Sign in to continue to your workspace."
-                  : "Get started with your HydroBlaze employee portal."}
+                Sign in to continue to your workspace.
               </p>
             </div>
 
@@ -140,13 +121,6 @@ function AuthPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === "signup" && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="name" className="text-xs uppercase tracking-wider text-muted-foreground">Full name</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required
-                    placeholder="Jane Doe" className="h-11 bg-background/50" />
-                </div>
-              )}
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground">Email</Label>
                 <div className="relative">
@@ -159,12 +133,10 @@ function AuthPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground">Password</Label>
-                  {mode === "signin" && (
-                    <button type="button" className="text-xs text-hydro hover:text-hydro-glow transition-colors"
-                      onClick={() => toast.info("Password reset coming soon")}>
-                      Forgot?
-                    </button>
-                  )}
+                  <button type="button" className="text-xs text-hydro hover:text-hydro-glow transition-colors"
+                    onClick={() => toast.info("Ask an admin to reset your password")}>
+                    Forgot?
+                  </button>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -174,18 +146,16 @@ function AuthPage() {
                 </div>
               </div>
 
-              {mode === "signin" && (
-                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-                  <Checkbox checked={remember} onCheckedChange={(v) => setRemember(!!v)} />
-                  Remember me on this device
-                </label>
-              )}
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                <Checkbox checked={remember} onCheckedChange={(v) => setRemember(!!v)} />
+                Remember me on this device
+              </label>
 
               <Button type="submit" disabled={busy}
                 className="w-full h-11 bg-gradient-hydro hover:shadow-glow-hydro transition-all font-semibold text-primary-foreground">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (
                   <>
-                    {mode === "signin" ? "Sign in" : "Create account"}
+                    Sign in
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </>
                 )}
@@ -193,12 +163,9 @@ function AuthPage() {
             </form>
 
             <p className="mt-6 text-center text-xs text-muted-foreground">
-              {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
-              <button className="text-hydro hover:text-hydro-glow transition-colors font-medium"
-                onClick={() => setMode(mode === "signin" ? "signup" : "signin")}>
-                {mode === "signin" ? "Sign up" : "Sign in"}
-              </button>
+              Access is invite-only. Contact your admin for an invitation.
             </p>
+
           </div>
           <p className="mt-6 text-center text-[11px] text-muted-foreground">
             <Link to="/" className="hover:text-foreground transition-colors">← Back to home</Link>

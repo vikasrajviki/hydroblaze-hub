@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Settings as SettingsIcon, User, Bell, Shield, Palette, Users, Plug } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Shield, Palette, Users, Plug, Mail, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { PageHeader, PageShell } from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/useAuth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth, type AppRole } from "@/hooks/useAuth";
+import { inviteUser } from "@/lib/invites.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -16,6 +21,8 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 function SettingsPage() {
   const { profile, role } = useAuth();
+  const isAdmin = role === "admin";
+
 
   return (
     <PageShell>
@@ -98,9 +105,10 @@ function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="roles" className="mt-6">
+        <TabsContent value="roles" className="mt-6 space-y-6">
+          {isAdmin && <InviteUserCard />}
           <Card>
-            <CardHeader><CardTitle>Roles & permissions</CardTitle><CardDescription>Modular permission system. Extend as your team grows.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Roles & permissions</CardTitle><CardDescription>Access is invite-only. Only admins can invite new members.</CardDescription></CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[
                 { name: "Admin", desc: "Full access to every module and setting." },
@@ -119,6 +127,7 @@ function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
 
         <TabsContent value="security" className="mt-6">
           <Card>
@@ -156,3 +165,65 @@ function SettingsPage() {
     </PageShell>
   );
 }
+
+function InviteUserCard() {
+  const invite = useServerFn(inviteUser);
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [inviteRole, setInviteRole] = useState<AppRole>("employee");
+  const [busy, setBusy] = useState(false);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await invite({ data: { email, role: inviteRole, full_name: fullName || undefined } });
+      toast.success(`Invitation sent to ${email}`);
+      setEmail("");
+      setFullName("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send invite");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Mail className="h-4 w-4 text-hydro" /> Invite a team member</CardTitle>
+        <CardDescription>Only admins can invite. The recipient will get an email link to set their password and join.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Email</Label>
+            <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="teammate@hydroblaze.media" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Full name</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Optional" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Role</Label>
+            <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as AppRole)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="employee">Employee</SelectItem>
+                <SelectItem value="intern">Intern</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-4 flex justify-end">
+            <Button type="submit" disabled={busy} className="bg-gradient-hydro text-primary-foreground hover:shadow-glow-hydro">
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send invite"}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
