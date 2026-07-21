@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Settings as SettingsIcon, User, Bell, Shield, Palette, Users, Plug } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Shield, Palette, Users, Plug, Mail, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { PageHeader, PageShell } from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/useAuth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth, type AppRole } from "@/hooks/useAuth";
+import { inviteUser } from "@/lib/invites.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -16,6 +21,8 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 function SettingsPage() {
   const { profile, role } = useAuth();
+  const isAdmin = role === "admin";
+
 
   return (
     <PageShell>
