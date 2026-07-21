@@ -105,9 +105,10 @@ function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="roles" className="mt-6">
+        <TabsContent value="roles" className="mt-6 space-y-6">
+          {isAdmin && <InviteUserCard />}
           <Card>
-            <CardHeader><CardTitle>Roles & permissions</CardTitle><CardDescription>Modular permission system. Extend as your team grows.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Roles & permissions</CardTitle><CardDescription>Access is invite-only. Only admins can invite new members.</CardDescription></CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[
                 { name: "Admin", desc: "Full access to every module and setting." },
@@ -126,6 +127,7 @@ function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
 
         <TabsContent value="security" className="mt-6">
           <Card>
