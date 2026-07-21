@@ -1,12 +1,14 @@
 import { cn } from "@/lib/utils";
+import logoAsset from "@/assets/hydroblaze-logo.png.asset.json";
 
 export function Logo({ className, showText = true }: { className?: string; showText?: boolean }) {
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
-      <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-hydro shadow-glow-hydro">
-        <div className="absolute inset-0 rounded-xl bg-gradient-blaze opacity-60 mix-blend-overlay" />
-        <span className="relative font-black text-primary-foreground text-lg tracking-tighter">H</span>
-      </div>
+      <img
+        src={logoAsset.url}
+        alt="HydroBlaze Media"
+        className="h-9 w-9 object-contain drop-shadow-[0_0_10px_hsl(197_100%_45%/0.35)]"
+      />
       {showText && (
         <div className="flex flex-col leading-none">
           <span className="text-sm font-bold tracking-tight text-foreground">
