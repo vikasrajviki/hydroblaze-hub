@@ -165,3 +165,65 @@ function SettingsPage() {
     </PageShell>
   );
 }
+
+function InviteUserCard() {
+  const invite = useServerFn(inviteUser);
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [inviteRole, setInviteRole] = useState<AppRole>("employee");
+  const [busy, setBusy] = useState(false);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await invite({ data: { email, role: inviteRole, full_name: fullName || undefined } });
+      toast.success(`Invitation sent to ${email}`);
+      setEmail("");
+      setFullName("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send invite");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Mail className="h-4 w-4 text-hydro" /> Invite a team member</CardTitle>
+        <CardDescription>Only admins can invite. The recipient will get an email link to set their password and join.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+          <div className="space-y-1.5 md:col-span-2">
+            <Label>Email</Label>
+            <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="teammate@hydroblaze.media" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Full name</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Optional" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Role</Label>
+            <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as AppRole)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="employee">Employee</SelectItem>
+                <SelectItem value="intern">Intern</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-4 flex justify-end">
+            <Button type="submit" disabled={busy} className="bg-gradient-hydro text-primary-foreground hover:shadow-glow-hydro">
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send invite"}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
